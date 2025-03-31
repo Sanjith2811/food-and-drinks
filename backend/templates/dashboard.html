@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard & Popular Movies</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .container {
+            padding: 20px;
+        }
+        #food-list, #car-list, #movieList {
+            margin-top: 20px;
+            display: none;
+        }
+        .movie-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px;
+        }
+        .movie-item {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .movie-item strong {
+            font-size: 1.2em;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the Dashboard</h1>
+        <button onclick="fetchFoodAndDrinks()">Food and Drinks List</button>
+        <button onclick="fetchCarList()">Car List</button>
+        <button onclick="goToFoodDrinksBooking()">Book Movies and Food & Drinks</button> <!-- Updated button text -->
+        <button onclick="fetchFamousMovies()">Popular Movies</button>
+
+        <div id="food-list"></div>
+        <div id="car-list"></div>
+        <div id="movieList"></div>
+    </div>
+
+    <script>
+        function showOnly(id) {
+            ['food-list', 'car-list', 'movieList'].forEach(el => 
+                document.getElementById(el).style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+        }
+
+        function fetchFoodAndDrinks() {
+            showOnly('food-list');
+            document.getElementById('food-list').innerHTML = "<p>Loading...</p>";
+            fetch("https://do4ef5aifl.execute-api.us-east-1.amazonaws.com/Prod/food-drinks")
+                .then(response => response.json())
+                .then(data => {
+                    let content = "<h3>Food & Drinks:</h3><ul>";
+                    data.food.forEach(item => content += `<li>${item.name} - ${item.price}</li>`);
+                    data.drinks.forEach(item => content += `<li>${item.name} - ${item.price}</li>`);
+                    content += "</ul>";
+                    document.getElementById('food-list').innerHTML = content;
+                })
+                .catch(() => document.getElementById('food-list').innerHTML = "<p>Error fetching data.</p>");
+        }
+
+        function fetchCarList() {
+            showOnly('car-list');
+            document.getElementById('car-list').innerHTML = "<p>Loading...</p>";
+            fetch("https://ozado4x5ci.execute-api.us-east-1.amazonaws.com/Dev")
+                .then(response => response.json())
+                .then(data => {
+                    let content = "<h3>Car List:</h3><ul>";
+                    data.available_cars.forEach(item => 
+                        content += `<li>${item.car_name} - ${item.fuel_type} - ${item.seats} seats - $${item.price_per_day}/day ${item.is_booked ? "(Booked)" : "(Available)"}</li>`);
+                    content += "</ul>";
+                    document.getElementById('car-list').innerHTML = content;
+                })
+                .catch(() => document.getElementById('car-list').innerHTML = "<p>Error fetching data.</p>");
+        }
+
+        function fetchFamousMovies() {
+            showOnly('movieList');
+            document.getElementById("movieList").innerHTML = "<p>Loading...</p>";
+            fetch('https://jd8ojhgd63.execute-api.us-east-1.amazonaws.com/dv')
+                .then(response => response.json())
+                .then(data => {
+                    if (data && Array.isArray(data.movies)) {
+                        let movieHTML = '<div class="movie-list">';
+                        data.movies.forEach(movie => {
+                            movieHTML += `<div class="movie-item">
+                                <strong>${movie.name}</strong> (${movie.year})<br>
+                                <strong>Director:</strong> ${movie.director}<br>
+                                <strong>Genres:</strong> ${movie.genre.join(", ")}<br>
+                                <strong>Plot:</strong> ${movie.plot}
+                            </div>`;
+                        });
+                        movieHTML += '</div>';
+                        document.getElementById("movieList").innerHTML = movieHTML;
+                    } else {
+                        document.getElementById("movieList").innerHTML = "<p>Error: Invalid data structure</p>";
+                    }
+                })
+                .catch(() => document.getElementById("movieList").innerHTML = "<p>Error fetching movie list.</p>");
+        }
+
+        function goToFoodDrinksBooking() {
+            window.location.href = 'order.html';
+        }
+    </script>
+</body>
+</html>

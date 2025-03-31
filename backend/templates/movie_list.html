@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Famous Movies</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            text-align: center;
+        }
+        .movie-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px;
+        }
+        .movie-item {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .movie-item strong {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎬 Famous Movies List</h1>
+
+    <!-- Button to Fetch Movies -->
+    <button id="getMovies">Fetch Famous Movies</button>
+    
+    <!-- Div to Display Movie List -->
+    <div id="movieList"></div>
+
+    <script>
+        document.getElementById("getMovies").addEventListener("click", function() {
+            fetch('https://jd8ojhgd63.execute-api.us-east-1.amazonaws.com/dv')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("API Response:", data); // Log the entire response to check the structure
+
+                    // Check if the response contains 'movies' key and it is an array
+                    if (data && Array.isArray(data.movies)) {
+                        console.log("Movies data found:", data.movies); // Log the movies array
+                        
+                        let movieHTML = '<div class="movie-list">';
+                        
+                        // Loop through the movies and create HTML
+                        data.movies.forEach(movie => {
+                            movieHTML += `<div class="movie-item">
+                                <strong>${movie.name}</strong> (${movie.year})<br>
+                                <strong>Director:</strong> ${movie.director}<br>
+                                <strong>Genres:</strong> ${movie.genre.join(", ")}<br>
+                                <strong>Plot:</strong> ${movie.plot}
+                            </div>`;
+                        });
+
+                        movieHTML += '</div>';
+
+                        // Set the HTML to the movie list container
+                        document.getElementById("movieList").innerHTML = movieHTML;
+                    } else {
+                        console.error("Invalid data structure:", data); // Log error if structure is incorrect
+                        document.getElementById("movieList").innerHTML = "<p style='color:red;'>Error: Invalid data structure</p>";
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById("movieList").innerHTML = "<p style='color:red;'>⚠ Error fetching movie list.</p>";
+                });
+        });
+    </script>
+</body>
+</html>

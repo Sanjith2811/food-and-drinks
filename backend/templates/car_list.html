@@ -1,0 +1,32 @@
+<button id="getCarList">Car List</button>
+<div id="carList"></div>
+
+<script>
+    document.getElementById("getCarList").addEventListener("click", function() {
+        fetch('https://ozado4x5ci.execute-api.us-east-1.amazonaws.com/Dev')  // API URL
+            .then(response => response.json())  // Convert response to JSON
+            .then(data => {
+                let carListHTML = '<h3>Available Cars</h3>';
+
+                // Check if available_cars exists and is not empty
+                if (data.available_cars && data.available_cars.length > 0) {
+                    carListHTML += '<ul>';
+                    data.available_cars.forEach(car => {
+                        carListHTML += `<li>
+                            <strong>${car.car_name}</strong> - ${car.fuel_type} - ${car.seats} seats - $${car.price_per_day}/day
+                            ${car.is_booked ? "(Booked)" : "(Available)"}
+                        </li>`;
+                    });
+                    carListHTML += '</ul>';
+                } else {
+                    carListHTML += "<p>No cars available.</p>";
+                }
+
+                document.getElementById("carList").innerHTML = carListHTML;
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                document.getElementById("carList").innerHTML = "<p>Error fetching car data.</p>";
+            });
+    });
+</script>

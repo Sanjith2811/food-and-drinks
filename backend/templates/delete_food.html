@@ -1,0 +1,9 @@
+<h2>Delete Food Item</h2>
+<p>Are you sure you want to delete <strong>{{ food.name }}</strong> from the list?</p>
+
+<form action="/delete_food/{{ food.id }}" method="post">
+    <button type="submit">Yes, Delete</button>
+</form>
+
+<a href="/dashboard">Cancel</a>
+c

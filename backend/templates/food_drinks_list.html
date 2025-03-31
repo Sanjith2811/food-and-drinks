@@ -1,0 +1,31 @@
+<button id="getFoodAndDrinks">Food and Drinks</button>
+<div id="priceList"></div>
+
+<script>
+    document.getElementById("getFoodAndDrinks").addEventListener("click", function() {
+        fetch('https://do4ef5aifl.execute-api.us-east-1.amazonaws.com/Prod/food-drinks')  // API Gateway URL
+            .then(response => response.json())
+            .then(data => {
+                if (!data.food || !data.drinks) {
+                    throw new Error("Invalid response from API");
+                }
+
+                let foodAndDrinksHTML = '<h3>Food and Drinks Price List</h3>';
+                foodAndDrinksHTML += '<h4>🍽 Food:</h4><ul>';
+                data.food.forEach(item => {
+                    foodAndDrinksHTML += `<li><strong>${item.name}</strong>: ₹${item.price}</li>`;
+                });
+                foodAndDrinksHTML += '</ul><h4>🥤 Drinks:</h4><ul>';
+                data.drinks.forEach(item => {
+                    foodAndDrinksHTML += `<li><strong>${item.name}</strong>: ₹${item.price}</li>`;
+                });
+                foodAndDrinksHTML += '</ul>';
+
+                document.getElementById("priceList").innerHTML = foodAndDrinksHTML;
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                document.getElementById("priceList").innerHTML = "<p style='color:red;'>⚠ Unable to load food and drinks list. Please try again later.</p>";
+            });
+    });
+</script>

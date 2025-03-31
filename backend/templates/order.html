@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Food & Drinks</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        button {
+            padding: 8px 12px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .delete-btn {
+            background-color: red;
+            color: white;
+            border: none;
+        }
+        .order-btn {
+            background-color: green;
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Your Order</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="orderTable">
+                <!-- Items will be dynamically added here -->
+            </tbody>
+        </table>
+
+        <h3>Total: $<span id="totalPrice">0</span></h3>
+        <button class="order-btn" onclick="placeOrder()">Place Order</button>
+        <a href="{{ url_for('home') }}"><button>Back to Menu</button></a>
+    </div>
+
+    <script>
+        function loadCart() {
+            let cart = JSON.parse(localStorage.getItem("cart")) || {};
+            let orderTable = document.getElementById("orderTable");
+            orderTable.innerHTML = ""; // Clear previous content
+            let total = 0;
+
+            for (let id in cart) {
+                let item = cart[id];
+                let row = `<tr>
+                    <td>${item.name}</td>
+                    <td>${item.quantity}</td>
+                    <td>$${item.price * item.quantity}</td>
+                    <td>
+                        <button class="delete-btn" onclick="removeItem('${id}')">Remove</button>
+                    </td>
+                </tr>`;
+                orderTable.innerHTML += row;
+                total += item.price * item.quantity;
+            }
+            document.getElementById("totalPrice").innerText = total.toFixed(2);
+        }
+
+        function removeItem(id) {
+            let cart = JSON.parse(localStorage.getItem("cart")) || {};
+            delete cart[id];
+            localStorage.setItem("cart", JSON.stringify(cart));
+            loadCart();
+        }
+
+        function placeOrder() {
+            let cart = JSON.parse(localStorage.getItem("cart")) || {};
+            if (Object.keys(cart).length === 0) {
+                alert("Your cart is empty!");
+                return;
+            }
+            alert("Order placed successfully!");
+            localStorage.removeItem("cart"); // Clear cart after order
+            loadCart(); // Refresh the table
+        }
+
+        window.onload = loadCart;
+    </script>
+
+</body>
+</html>
