@@ -1,32 +1,147 @@
-<button id="getCarList">Car List</button>
-<div id="carList"></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+        h1, h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 12px 24px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #carList {
+            margin-top: 20px;
+        }
+        .car-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 0;
+        }
+        .car-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: left;
+            transition: transform 0.2s;
+        }
+        .car-card:hover {
+            transform: translateY(-5px);
+        }
+        .car-card h4 {
+            margin: 0 0 10px;
+            color: #4CAF50;
+            font-size: 20px;
+        }
+        .car-card p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .status {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+        .available {
+            background-color: #e6ffe6;
+            color: #2e7d32;
+        }
+        .booked {
+            background-color: #ffe6e6;
+            color: #c62828;
+        }
+        .error {
+            color: #c62828;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Explore Our Car Collection</h1>
+        <button id="getCarList">View Car List</button>
+        <a href="{{ url_for('dashboard') }}"><button>Back to Dashboard</button></a>
+        <div id="carList"></div>
+    </div>
 
-<script>
-    document.getElementById("getCarList").addEventListener("click", function() {
-        fetch('https://ozado4x5ci.execute-api.us-east-1.amazonaws.com/Dev')  // API URL
-            .then(response => response.json())  // Convert response to JSON
-            .then(data => {
-                let carListHTML = '<h3>Available Cars</h3>';
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const carListButton = document.getElementById("getCarList");
+            const carListDiv = document.getElementById("carList");
 
-                // Check if available_cars exists and is not empty
-                if (data.available_cars && data.available_cars.length > 0) {
-                    carListHTML += '<ul>';
-                    data.available_cars.forEach(car => {
-                        carListHTML += `<li>
-                            <strong>${car.car_name}</strong> - ${car.fuel_type} - ${car.seats} seats - $${car.price_per_day}/day
-                            ${car.is_booked ? "(Booked)" : "(Available)"}
-                        </li>`;
-                    });
-                    carListHTML += '</ul>';
-                } else {
-                    carListHTML += "<p>No cars available.</p>";
-                }
+            carListButton.addEventListener("click", function() {
+                carListDiv.innerHTML = '<p>Loading cars...</p>';
 
-                document.getElementById("carList").innerHTML = carListHTML;
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-                document.getElementById("carList").innerHTML = "<p>Error fetching car data.</p>";
+                fetch('https://ozado4x5ci.execute-api.us-east-1.amazonaws.com/Dev', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('API Response:', data);
+
+                    let carListHTML = '<h3>Available Cars</h3>';
+
+                    if (data && data.available_cars && Array.isArray(data.available_cars) && data.available_cars.length > 0) {
+                        carListHTML += '<div class="car-grid">';
+                        data.available_cars.forEach(car => {
+                            carListHTML += `
+                                <div class="car-card">
+                                    <h4>${car.car_name || 'Unknown Car'}</h4>
+                                    <p><strong>Fuel Type:</strong> ${car.fuel_type || 'N/A'}</p>
+                                    <p><strong>Seats:</strong> ${car.seats || 'N/A'}</p>
+                                    <p><strong>Price:</strong> $${car.price_per_day || 'N/A'}/day</p>
+                                    <p><span class="status ${car.is_booked ? 'booked' : 'available'}">
+                                        ${car.is_booked ? 'Booked' : 'Available'}
+                                    </span></p>
+                                </div>`;
+                        });
+                        carListHTML += '</div>';
+                    } else {
+                        carListHTML += '<p>No cars available at the moment.</p>';
+                    }
+
+                    carListDiv.innerHTML = carListHTML;
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    carListDiv.innerHTML = `<p class="error">Error fetching car data: ${error.message}. Please try again later.</p>`;
+                });
             });
-    });
-</script>
+        });
+    </script>
+</body>
+</html>
