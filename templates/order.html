@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Food & Drinks</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #74ebd5, #acb6e5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+            font-size: 16px;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            font-size: 16px;
+            color: #333;
+        }
+        tr:hover td {
+            background-color: #f5f5f5;
+        }
+        .total-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            margin-bottom: 20px;
+        }
+        .total-section h3 {
+            color: #333;
+            font-size: 18px;
+            margin: 0;
+        }
+        #totalPrice {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        button {
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+            border: none;
+        }
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+            width: 100%;
+        }
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+        .order-btn {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+        }
+        .order-btn:hover {
+            background-color: #45a049;
+        }
+        .back-btn {
+            width: 100%;
+            background-color: #ffffff;
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+        .back-btn:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        #invoice {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            text-align: left;
+            font-size: 16px;
+            color: #333;
+        }
+        #invoice ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        #invoice strong {
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your Order</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="orderTable"></tbody>
+        </table>
+        <div class="total-section">
+            <h3>Total:</h3>
+            <h3>€<span id="totalPrice">0</span></h3>
+        </div>
+        <div class="button-group">
+            <button class="order-btn" onclick="placeOrder()">Place Order</button>
+            <a href="{{ url_for('dashboard') }}"><button class="back-btn">Back to Menu</button></a>
+        </div>
+        <div id="invoice" style="display:none;"></div>
+    </div>
+
+    <script>
+        function loadCart() {
+            let cart = JSON.parse(localStorage.getItem("cart")) || {};
+            let orderTable = document.getElementById("orderTable");
+            orderTable.innerHTML = "";
+            let total = 0;
+
+            for (let id in cart) {
+                let item = cart[id];
+                let row = `<tr>
+                    <td>${item.name}</td>
+                    <td>${item.quantity}</td>
+                    <td>€${item.price * item.quantity}</td>
+                    <td><button class="delete-btn" onclick="removeItem('${id}')">Remove</button></td>
+                </tr>`;
+                orderTable.innerHTML += row;
+                total += item.price * item.quantity;
+            }
+            document.getElementById("totalPrice").innerText = total.toFixed(2);
+        }
+
+        function removeItem(id) {
+            let cart = JSON.parse(localStorage.getItem("cart")) || {};
+            delete cart[id];
+            localStorage.setItem("cart", JSON.stringify(cart));
+            loadCart();
+        }
+
+        function placeOrder() {
+            let cart = JSON.parse(localStorage.getItem("cart")) || {};
+            if (Object.keys(cart).length === 0) {
+                alert("Your cart is empty!");
+                return;
+            }
+
+            let orderData = {
+                username: "{{ session['user'] }}" || "Guest",
+                items: {}
+            };
+            for (let id in cart) {
+                orderData.items[id] = cart[id].quantity;
+            }
+
+            fetch('/place_order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Server response:", data);
+                if (data.message === "Order placed successfully!" && data.invoice) {
+                    let invoice = data.invoice;
+                    let invoiceDiv = document.getElementById("invoice");
+                    invoiceDiv.style.display = "block";
+                    invoiceDiv.innerHTML = `
+                        <h3>Invoice</h3>
+                        <p><strong>Order ID:</strong> ${invoice.order_id}</p>
+                        <p><strong>Username:</strong> ${invoice.username}</p>
+                        <p><strong>Items:</strong></p>
+                        <ul>
+                            ${invoice.items.map(item => `<li>${item.name} - ${item.quantity} x €${item.price} = €${item.price * item.quantity}</li>`).join('')}
+                        </ul>
+                        <p><strong>Total Cost:</strong> €${invoice.total_price}</p>
+                    `;
+                    localStorage.removeItem("cart");
+                    loadCart();
+                } else {
+                    alert("Error: " + (data.error || "Invalid response from server"));
+                }
+            })
+            .catch(error => {
+                console.error("Fetch error:", error);
+                alert("Error placing order: " + error.message);
+            });
+        }
+
+        window.onload = loadCart;
+    </script>
+</body>
+</html>

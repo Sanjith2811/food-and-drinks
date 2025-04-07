@@ -1,0 +1,21 @@
+<h2>Edit Food Item</h2>
+<form action="/edit_food/{{ food.id }}" method="post">
+    <label>Food Name:</label>
+    <input type="text" name="name" value="{{ food.name }}" required>
+
+    <label>Category:</label>
+    <input type="text" name="category" value="{{ food.category }}" required>
+
+    <label>Location:</label>
+    <input type="text" name="location" value="{{ food.location }}" required>
+
+    <label>Rating:</label>
+    <input type="number" name="rating" value="{{ food.rating }}" required>
+
+    <label>Availability:</label>
+    <select name="availability">
+        <option value="Yes" {% if food.availability == 'Yes' %} selected {% endif %}>Yes</option>
+        <option value="No" {% if food.availability == 'No' %} selected {% endif %}>No</option>
+    </select>
+
+    <button type="submit">Update Food</button>
